@@ -983,8 +983,8 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(response)
     
     async def clear_memory(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    chat_id = update.effective_chat.id
-    history = load_conversation_history()
+         chat_id = update.effective_chat.id
+         history = load_conversation_history()
     
     if str(chat_id) in history:
         del history[str(chat_id)]

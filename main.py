@@ -937,27 +937,34 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_message = update.message.text
     chat_id = update.effective_chat.id
     
-    # Check if message starts with any command (skip processing)
+    # Skip commands
     if user_message.startswith('/'):
         return
-    
-    text_lower = user_message.lower()
+
     should_respond = False
+    text_lower = user_message.lower()
 
-    # Condition 1: Bot is tagged
-    if config.bot_username.lower() in text_lower:
+    if update.effective_chat.type in ["group", "supergroup"]:
+        # Condition 1: User tagged the bot (@BotUsername)
+        if f"@{config.bot_username.lower().lstrip('@')}" in text_lower:
+            should_respond = True
+
+        # Condition 2: User replied to a message from the bot
+        if (
+            update.message.reply_to_message 
+            and update.message.reply_to_message.from_user 
+            and update.message.reply_to_message.from_user.id == context.bot.id
+        ):
+            should_respond = True
+
+        # Condition 3: Contains "hinata"
+        if "hinata" in text_lower:
+            should_respond = True
+    else:
+        # In private (DMs) → always respond
         should_respond = True
 
-    # Condition 2: Message is a reply to the bot
-    if update.message.reply_to_message and \
-       update.message.reply_to_message.from_user.username == config.bot_username.lstrip('@'):
-        should_respond = True
-
-    # Condition 3: Message contains "hinata" (case-insensitive, handles "hinataaa" too)
-    if "hinata" in text_lower:
-        should_respond = True
-
-    # If none of the conditions match, ignore the message
+    # If no trigger matched in group → ignore
     if not should_respond:
         return
     
@@ -967,15 +974,15 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Update conversation history
     update_conversation_history(chat_id, "user", user_message)
     
-    # Generate response
+    # Generate AI response
     response = await generate_response(chat_id, user_message)
     
-    # Update conversation history with bot's response
+    # Save bot response
     update_conversation_history(chat_id, "model", response)
     
     await update.message.reply_text(response)
-    #2nd test msg handler □¤□ above
-async def clear_memory(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    
+    async def clear_memory(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
     history = load_conversation_history()
     

@@ -1,6 +1,7 @@
 python-telegram-bot
 httpx
 flask
+aiohttp
 qrcode
 pillow
 psutil

@@ -1053,7 +1053,8 @@ def main():
     application.add_handler(CommandHandler("eval", eval_command))
     application.add_handler(CommandHandler("server", server))
     application.add_handler(CommandHandler("ping", ping))
-    
+    application.add_handler(CommandHandler("commands", commands))
+
     # Utility commands
     application.add_handler(CommandHandler("dice", dice))
     application.add_handler(CommandHandler("flip", flip))
@@ -1061,6 +1062,7 @@ def main():
     application.add_handler(CommandHandler("qr", qr_code))
     application.add_handler(CommandHandler("countdown", countdown))
     application.add_handler(CommandHandler("timer", timer))
+
     application.add_handler(CommandHandler("rate", rate))
     application.add_handler(CommandHandler("decide", decide))
     application.add_handler(CommandHandler("color", color_preview))

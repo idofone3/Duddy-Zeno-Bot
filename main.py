@@ -230,7 +230,7 @@ async def commands(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     except Exception as e:
         await update.message.reply_text(f"❌ Error: {e}")
-        some commands that uses dont use ✨
+     #   some commands that users dont use ✨
 async def generate_response(chat_id: int, user_message: str) -> str:
     history = load_conversation_history()
     chat_history = history.get(str(chat_id), [])

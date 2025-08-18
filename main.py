@@ -1,4 +1,5 @@
 import os
+import aiohttp
 from flask import Flask
 import threading
 import json
@@ -209,6 +210,26 @@ def update_conversation_history(chat_id, role, message):
     
     save_conversation_history(history)
 
+async def commands(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    url = "https://pastebin.com/raw/kmgBUCv1"  # your webpage
+    
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as resp:
+                if resp.status != 200:
+                    await update.message.reply_text("⚠️ Failed to fetch commands.")
+                    return
+                data = await resp.text()
+        
+        # Send with Markdown parsing
+        await update.message.reply_text(
+            f"📜 Available Commands:\n\n{data}",
+            parse_mode="Markdown"
+        )
+    
+    except Exception as e:
+        await update.message.reply_text(f"❌ Error: {e}")
+        
 async def generate_response(chat_id: int, user_message: str) -> str:
     history = load_conversation_history()
     chat_history = history.get(str(chat_id), [])

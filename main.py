@@ -892,7 +892,7 @@ async def copy_id_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # Message handlers
 # ======================
 
-async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+'''async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if config.maintenance_mode and update.effective_user.id != config.owner_id:
         await update.message.reply_text("🛠 Bot is under maintenance. Please try again later.")
         return
@@ -922,7 +922,59 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     update_conversation_history(chat_id, "model", response)
     
     await update.message.reply_text(response)
+'''
 
+async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if config.maintenance_mode and update.effective_user.id != config.owner_id:
+        await update.message.reply_text("🛠 Bot is under maintenance. Please try again later.")
+        return
+    
+    banned_users = load_banned_users()
+    if update.effective_user.id in banned_users:
+        await update.message.reply_text("🚫 You are banned from using this bot.")
+        return
+    
+    user_message = update.message.text
+    chat_id = update.effective_chat.id
+    
+    # Check if message starts with any command (skip processing)
+    if user_message.startswith('/'):
+        return
+    
+    text_lower = user_message.lower()
+    should_respond = False
+
+    # Condition 1: Bot is tagged
+    if config.bot_username.lower() in text_lower:
+        should_respond = True
+
+    # Condition 2: Message is a reply to the bot
+    if update.message.reply_to_message and \
+       update.message.reply_to_message.from_user.username == config.bot_username.lstrip('@'):
+        should_respond = True
+
+    # Condition 3: Message contains "hinata" (case-insensitive, handles "hinataaa" too)
+    if "hinata" in text_lower:
+        should_respond = True
+
+    # If none of the conditions match, ignore the message
+    if not should_respond:
+        return
+    
+    # Show typing action
+    await context.bot.send_chat_action(chat_id=chat_id, action="typing")
+    
+    # Update conversation history
+    update_conversation_history(chat_id, "user", user_message)
+    
+    # Generate response
+    response = await generate_response(chat_id, user_message)
+    
+    # Update conversation history with bot's response
+    update_conversation_history(chat_id, "model", response)
+    
+    await update.message.reply_text(response)
+    #2nd test msg handler □¤□ above
 async def clear_memory(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
     history = load_conversation_history()

@@ -1,3 +1,4 @@
+#fucking nesssecary import else code will be fucked
 import os
 import aiohttp
 from flask import Flask
@@ -21,14 +22,14 @@ import httpx
 from datetime import datetime
 from typing import List, Dict, Optional
 
-# Set up logging
+#logging 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
 )
 logger = logging.getLogger(__name__)
 
-# Bot Configuration
+#Bot Configs or again the code will be fucked
 class BotConfig:
     def __init__(self):
         self.config = self.load_config()
@@ -62,10 +63,10 @@ class BotConfig:
         
         return config
 
-# Initialize config
+#initialize config
 config = BotConfig()
 
-# Banned users storage
+#Banned users storage for persistency 
 BANNED_USERS_FILE = "banned_users.json"
 
 def load_banned_users():
@@ -173,7 +174,7 @@ class GeminiAPI:
 # Initialize Gemini API handler
 gemini = GeminiAPI()
 
-# Conversation history storage
+# Conversation history storage for persistent memory 
 CONVERSATION_HISTORY_FILE = "conversation_history.json"
 
 def load_conversation_history():
@@ -229,7 +230,7 @@ async def commands(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     except Exception as e:
         await update.message.reply_text(f"❌ Error: {e}")
-        
+        some commands that uses dont use ✨
 async def generate_response(chat_id: int, user_message: str) -> str:
     history = load_conversation_history()
     chat_history = history.get(str(chat_id), [])
@@ -1032,10 +1033,10 @@ async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # ======================
 
 def main():
-    # Create the Application
+    #create the application with flask
     application = Application.builder().token(config.config['TELEGRAM_BOT_TOKEN']).build()
     
-    # Add command handlers
+    # Add command handlers for the defined commands
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("help", button_handler))
     application.add_handler(CommandHandler("clearmemory", clear_memory))
@@ -1096,11 +1097,11 @@ def home():
 
 def run_flask():
     app.run(host="0.0.0.0", port=8000)
-    
+    #have to upgrade to WSGI server flask later
 if __name__ == "__main__":
-    # Start Flask server in a separate thread
+    # Start Flask server in a separate thread for now
     threading.Thread(target=run_flask).start()
     
     main()
-    # Simple Flask server for health check
+    # Simple Flask server for health check or in easy way keep the server alive from killing
 

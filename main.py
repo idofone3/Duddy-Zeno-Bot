@@ -1229,7 +1229,11 @@ def main():
     application.add_handler(CommandHandler("emoji", emoji_suggest))
     application.add_handler(CommandHandler("bmi", bmi_calc))
     application.add_handler(CommandHandler("id", get_id))
+    application.add_handler(CommandHandler("stickerid", sticker_id))
+    application.add_handler(CommandHandler("togglesticker", toggle_sticker_response))
     
+    # Add the sticker reply handler
+    application.add_handler(MessageHandler(filters.REPLY & filters.Sticker.ALL, handle_sticker_reply))
     # Button handler
     application.add_handler(CallbackQueryHandler(button_handler))
     application.add_handler(CallbackQueryHandler(copy_id_button))

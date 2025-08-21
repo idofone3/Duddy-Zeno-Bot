@@ -9,6 +9,7 @@ import random
 import time
 import qrcode
 import io
+from telegram import Sticker
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
     Application,
@@ -32,6 +33,7 @@ logger = logging.getLogger(__name__)
 #Bot Configs or again the code will be fucked
 class BotConfig:
     def __init__(self):
+        self.sticker_packs = self.load_sticker_packs()
         self.config = self.load_config()
         self.bot_name = self.config.get('BOT_NAME', '𝙷𝚒𝚗𝚊𝚝𝚊')
         self.owner_name = self.config.get('OWNER_NAME', '𝙰𝚜𝚑')
@@ -62,9 +64,24 @@ class BotConfig:
                 raise ValueError(f"ᴍɪꜱꜱɪɴɢ ʀᴇQᴜɪʀᴇᴅ ᴋᴇʏ ɪɴ ᴄᴏɴꜰɪɢ: {key}")
         
         return config
+        
+     def load_sticker_packs(self):
+        """Load sticker packs from config"""
+        packs = []
+        i = 1
+        while f'STICKER_PACK_{i}' in self.config:
+            packs.append(self.config[f'STICKER_PACK_{i}'])
+            i += 1
+        return packs
+         
+    def get_random_sticker():
+         """Get a random sticker from configured packs"""
+       if not config.sticker_packs:
+          return None
 
 #initialize config
 config = BotConfig()
+STICKER_RESPONSE_ENABLED = True
 
 #Banned users storage for persistency 
 BANNED_USERS_FILE = "banned_users.json"
@@ -78,6 +95,85 @@ def load_banned_users():
     except Exception as e:
         logger.error(f"ᴇʀʀᴏʀ ʟᴏᴀᴅɪɴɢ ʙᴀɴɴᴇᴅ ᴜꜱᴇʀꜱ: {e}")
         return []
+
+async def sticker_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Get the ID of a sticker"""
+    if not update.message.reply_to_message or not update.message.reply_to_message.sticker:
+        await update.message.reply_text("❌ Please reply to a sticker message to get its ID.")
+        return
+    
+    sticker = update.message.reply_to_message.sticker
+    await update.message.reply_text(
+        f"📋 Sticker Info:\n"
+        f"✦ File ID: `{sticker.file_id}`\n"
+        f"✦ Emoji: {sticker.emoji or 'None'}\n"
+        f"✦ Set Name: {sticker.set_name or 'None'}\n"
+        f"✦ Is Animated: {sticker.is_animated}",
+        parse_mode='Markdown'
+    )
+
+async def toggle_sticker_response(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Toggle sticker responses on/off (owner only)"""
+    if update.effective_user.id != config.owner_id:
+        await update.message.reply_text("❌ This command is only for my owner!")
+        return
+    
+    global STICKER_RESPONSE_ENABLED
+    STICKER_RESPONSE_ENABLED = not STICKER_RESPONSE_ENABLED
+    
+    status = "enabled" if STICKER_RESPONSE_ENABLED else "disabled"
+    await update.message.reply_text(f"✅ Sticker responses are now {status}.")
+
+async def handle_sticker_reply(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle when a user replies to the bot's message with a sticker"""
+    if not STICKER_RESPONSE_ENABLED:
+        return
+    
+    # Check if this is a reply to the bot's message
+    if not update.message.reply_to_message:
+        return
+        
+    # Check if the replied message is from the bot
+    if update.message.reply_to_message.from_user.id != context.bot.id:
+        return
+    
+    # Check if the message contains a sticker
+    if not update.message.sticker:
+        return
+    
+    # Get a random sticker from configured packs
+    sticker_pack = get_random_sticker()
+    if not sticker_pack:
+        return
+    
+    # Send a sticker from the pack
+    try:
+        # In a real implementation, you'd need to fetch stickers from the pack
+        # For now, we'll just send a message about the sticker pack
+        await update.message.reply_text(f"😊 Nice sticker! Check out my {sticker_pack} pack!")
+    except Exception as e:
+        logger.error(f"Error sending sticker response: {e}")
+
+async def handle_mention(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle when the bot is mentioned in a group"""
+    # Check if this is a group chat
+    if update.effective_chat.type == "private":
+        return
+    
+    # Check if the bot is mentioned or the message contains the bot's name
+    message_text = update.message.text or ""
+    bot_username = context.bot.username.lower()
+    bot_name = config.bot_name.lower()
+    
+    if (f"@{bot_username}" in message_text.lower() or 
+        bot_name in message_text.lower() or
+        update.message.text_entities and any(
+            entity.type == "mention" and entity.get_text(update.message.text).lower() == f"@{bot_username}"
+            for entity in update.message.text_entities
+        )):
+        
+        # Process the message as if it was sent directly to the bot
+        await handle_message(update, context)
 
 def save_banned_users(banned_users):
     try:
